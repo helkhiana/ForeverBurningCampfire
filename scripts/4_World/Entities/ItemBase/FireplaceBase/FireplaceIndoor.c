@@ -195,20 +195,16 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 		return false;
 	}
 
-	override bool CanReleaseAttachment( EntityAI attachment )
-	{		
-		ItemBase item = ItemBase.Cast( attachment );		
+	override bool CanReleaseAttachment(EntityAI attachment)
+	{
+		ItemBase item = ItemBase.Cast(attachment);
 
-		if ( item.IsKindOf( "FBF_Pot" ) ||  item.IsKindOf( "FBF_FryingPan" ) || item.IsKindOf( "Pot" ))
+		if (item.IsKindOf("FBF_Pot") || item.IsKindOf("FBF_FryingPan"))
 		{
 			return false;
 		}
-		if ( item.IsKindOf( "Edible_Base" ) )
-		{
-			return true;
-		}
-		
-		return false;
+
+		return true;
 	}
 
 	override void EEItemAttached( EntityAI item, string slot_name ) 

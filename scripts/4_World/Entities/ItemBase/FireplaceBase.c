@@ -2499,14 +2499,18 @@ class FBF_FireplaceBase extends ItemBase
 	// ADVANCED PLACEMENT
 	//================================================================
 	
-	override void OnPlacementComplete( Man player )
-	{		
-		super.OnPlacementComplete( player );
-			
-		PlayerBase player_base = PlayerBase.Cast( player );
+	#ifdef DAYZ_1_09	
+	override void OnPlacementComplete(Man player)
+	{
+		super.OnPlacementComplete(player);
+		PlayerBase player_base = PlayerBase.Cast(player);
 		vector position = player_base.GetLocalProjectionPosition();
 		vector orientation = player_base.GetLocalProjectionOrientation();
-		
+	#else
+	override void OnPlacementComplete(Man player, vector position = "0 0 0", vector orientation = "0 0 0")
+	{
+		super.OnPlacementComplete(player, position, orientation);
+	#endif
 		if ( GetGame().IsMultiplayer()  &&  GetGame().IsServer() || !GetGame().IsMultiplayer() )
 		{
 			//remove grass
