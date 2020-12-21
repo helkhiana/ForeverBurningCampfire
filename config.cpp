@@ -160,6 +160,113 @@ class CfgVehicles
 					id=898;
 				};
 			};
+		};		
+		class DamageSystem
+		{
+			class GlobalHealth
+			{
+				class Health
+				{
+					hitpoints=100;
+					healthLabels[]={1,0.69999999,0.5,0.30000001,0};
+					healthLevels[]=
+					{
+						
+						{
+							1,
+							
+							{
+								"DZ\gear\cooking\data\FireplaceKit.rvmat",
+								"DZ\gear\cooking\data\FireplaceKit.rvmat"
+							}
+						},
+						
+						{
+							0.69999999,
+							
+							{
+								"DZ\gear\cooking\data\FireplaceKit.rvmat",
+								"DZ\gear\cooking\data\FireplaceKit.rvmat"
+							}
+						},
+						
+						{
+							0.5,
+							
+							{
+								"DZ\gear\cooking\data\FireplaceKit.rvmat",
+								"DZ\gear\cooking\data\FireplaceKit.rvmat"
+							}
+						},
+						
+						{
+							0.30000001,
+							
+							{
+								"DZ\gear\cooking\data\FireplaceKit.rvmat",
+								"DZ\gear\cooking\data\FireplaceKit.rvmat"
+							}
+						},
+						
+						{
+							0,
+							
+							{
+								"DZ\gear\cooking\data\FireplaceKit.rvmat",
+								"DZ\gear\cooking\data\FireplaceKit.rvmat"
+							}
+						}
+					};
+				};
+			};
+			class GlobalArmor
+			{
+				class Projectile
+				{
+					class Health
+					{
+						damage=0;
+					};
+					class Blood
+					{
+						damage=0;
+					};
+					class Shock
+					{
+						damage=0;
+					};
+				};
+				class Melee
+				{
+					class Health
+					{
+						damage=0;
+					};
+					class Blood
+					{
+						damage=0;
+					};
+					class Shock
+					{
+						damage=0;
+					};
+				};
+				class FragGrenade
+				{
+					class Health
+					{
+						damage=0;
+					};
+					class Blood
+					{
+						damage=0;
+					};
+					class Shock
+					{
+						damage=0;
+					};
+				};
+			};
 		};
 	};
 	class FBF_Fireplace: FBF_FireplaceBase
@@ -191,7 +298,11 @@ class CfgVehicles
 			"Stones",
 			"DirectCookingA",
 			"DirectCookingB",
-			"DirectCookingC"
+			"DirectCookingC",
+			"SmokingA",
+			"SmokingB",
+			"SmokingC",
+			"SmokingD"
 		};
 		class GUIInventoryAttachmentsProps
 		{
@@ -207,6 +318,20 @@ class CfgVehicles
 				icon="cat_fp_cooking";
 				view_index=1;
 			};
+			class Smoking
+			{
+				name="$STR_attachment_Smoking";
+				description="";
+				attachmentSlots[]=
+				{
+					"SmokingA",
+					"SmokingB",
+					"SmokingC",
+					"SmokingD"
+				};
+				icon="cookingequipment";
+				view_index=2;
+			};
 			class DirectCooking
 			{
 				name="$STR_attachment_CookingEquipment0";
@@ -218,7 +343,7 @@ class CfgVehicles
 					"DirectCookingC"
 				};
 				icon="cookingequipment";
-				view_index=2;
+				view_index=3;
 			};
 			class Upgrade
 			{
@@ -229,7 +354,7 @@ class CfgVehicles
 					"Stones"
 				};
 				icon="cat_fp_upgrade";
-				view_index=3;
+				view_index=4;
 			};
 			class Fuel
 			{
@@ -241,7 +366,7 @@ class CfgVehicles
 					"WoodenStick"
 				};
 				icon="cat_fp_fuel";
-				view_index=4;
+				view_index=5;
 			};
 			class Kindling
 			{
@@ -255,7 +380,7 @@ class CfgVehicles
 					"Bark"
 				};
 				icon="cat_fp_kindling";
-				view_index=5;
+				view_index=6;
 			};
 		};
 		hiddenSelections[]=
@@ -303,10 +428,27 @@ class CfgVehicles
 			"Paper",
 			"Bark",
 			"DirectCookingA",
-			"DirectCookingB"
+			"DirectCookingB",
+			"SmokingA",
+			"SmokingB",
+			"SmokingC",
+			"SmokingD"
 		};
 		class GUIInventoryAttachmentsProps
 		{
+			class Smoking
+			{
+				name="$STR_attachment_Smoking";
+				description="";
+				attachmentSlots[]=
+				{
+					"SmokingA",
+					"SmokingB",
+					"SmokingC",
+					"SmokingD"
+				};
+				icon="cookingequipment";
+			};
 			class CookingEquipment
 			{
 				name="$STR_attachment_CookingEquipment0";
@@ -352,10 +494,6 @@ class CfgVehicles
 	class FBF_Pot: Pot
 	{
 		itemsCargoSize[]={10,6};
-		varQuantityInit=6000;
-		varQuantityMin=0;
-		varQuantityMax=6000;
-		varTemperatureMax=200;	
 	};
 	class FBF_FryingPan: FryingPan
 	{
