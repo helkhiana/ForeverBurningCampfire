@@ -10,6 +10,10 @@ modded class ActionBuildOven: ActionContinuousBase
 		{
 			return true;
 		}
+		else if(fireplace_target)
+		{
+			return false;
+		}		
 		
 		return super.ActionCondition(player, target, item);
 	}

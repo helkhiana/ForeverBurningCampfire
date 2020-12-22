@@ -490,6 +490,84 @@ class CfgVehicles
 			"ashes"
 		};
 	};
+	
+	class FBF_OvenIndoor: FBF_FireplaceBase
+	{
+		scope=2;
+		displayName="$STR_cfgvehicles_fireplace0";
+		descriptionShort="$STR_cfgvehicles_fireplace1";
+		model="\dz\gear\cooking\OvenIndoor.p3d";
+		overrideDrawArea="8.0";
+		rotationFlags=64;
+		openable=0;
+		lootCategory="Crafted";
+		itemSize[]={4,4};
+		itemsCargoSize[]={10,30};
+		attachments[]=
+		{
+			"Firewood",
+			"WoodenStick",
+			"Rags",
+			"MedicalBandage",
+			"Paper",
+			"Bark",
+			"DirectCookingA",
+			"SmokingA",
+			"SmokingB"
+		};
+		class GUIInventoryAttachmentsProps
+		{
+			class Smoking
+			{
+				name="$STR_attachment_Smoking";
+				description="";
+				attachmentSlots[]=
+				{
+					"SmokingA",
+					"SmokingB"
+				};
+				icon="cookingequipment";
+			};
+			class CookingEquipment
+			{
+				name="$STR_attachment_CookingEquipment0";
+				description="";
+				attachmentSlots[]=
+				{
+					"DirectCookingA"
+				};
+				icon="cookingequipment";
+			};
+			class Fuel
+			{
+				name="$STR_attachment_Fuel0";
+				description="";
+				attachmentSlots[]=
+				{
+					"Firewood",
+					"WoodenStick"
+				};
+				icon="cat_fp_fuel";
+			};
+			class Kindling
+			{
+				name="$STR_attachment_Kindling0";
+				description="";
+				attachmentSlots[]=
+				{
+					"Rags",
+					"MedicalBandage",
+					"Paper",
+					"Bark"
+				};
+				icon="cat_fp_kindling";
+			};
+		};
+		hiddenSelections[]=
+		{
+			"ashes"
+		};
+	};
 		
 	class FBF_Pot: Pot
 	{

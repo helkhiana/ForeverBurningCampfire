@@ -14,6 +14,8 @@ enum FBF_FireplaceFireState
 
 class FBF_FireplaceLight extends PointLightBase
 {	
+	static float m_FireplaceRadius = 25;
+	static float m_FireplaceBrightness = 4.75;
 	void FBF_FireplaceLight()
 	{
 		SetVisibleDuringDaylight(false);
@@ -51,8 +53,9 @@ class FBF_FireplaceBase extends ItemBase
 	protected bool m_IsOven		= false;
 	protected bool m_HasStoneCircle = false;
 	protected bool m_RoofAbove 	= false;
-	protected FireplaceFireState m_FireState	 = FireplaceFireState.NO_FIRE;
-	protected FireplaceFireState m_LastFireState = FireplaceFireState.NO_FIRE;		//for synchronization purposes
+	protected int m_OvenAttachmentsLockState = -1;
+	protected FBF_FireplaceFireState m_FireState	 = FBF_FireplaceFireState.NO_FIRE;
+	protected FBF_FireplaceFireState m_LastFireState = FBF_FireplaceFireState.NO_FIRE;		//for synchronization purposes
 	
 	//Fireplace params
 	protected float m_TemperatureLossMP		= 1.0;		//! determines how fast will the fireplace loose its temperature when cooling (lower is better)
@@ -79,11 +82,11 @@ class FBF_FireplaceBase extends ItemBase
 	const float	PARAM_ITEM_HEAT_TEMP_INCREASE_COEF	= 10;		//! value for calculating temperature increase on each heat update interval (degree Celsius)
 	const float	PARAM_ITEM_HEAT_MIN_TEMP			= 40;		//! minimum temperature for items that can be heated in fireplace cargo or as attachments (degree Celsius)
 	const float PARAM_MAX_ITEM_HEAT_TEMP_INCREASE	= 200;		//! maximum value of temperature of items in fireplace when heating (degree Celsius)
-	const float PARAM_HEAT_RADIUS 					= 3.0;		//! radius in which objects are heated by fire
+	const float PARAM_HEAT_RADIUS 					= 6.0;		//! radius in which objects are heated by fire
 	const float PARAM_HEAT_THROUGH_AIR_COEF			= 0.035;	//! value for calculation of heat transfered from fireplace through air to player (environment)
 	//! 
-	const int 	MIN_STONES_TO_BUILD_CIRCLE			= 1;		//! minimum amount of stones for circle
-	const int 	MIN_STONES_TO_BUILD_OVEN			= 2;		//! minimum amount of stones for oven
+	const int 	MIN_STONES_TO_BUILD_CIRCLE			= 8;		//! minimum amount of stones for circle
+	const int 	MIN_STONES_TO_BUILD_OVEN			= 16;		//! minimum amount of stones for oven
 	const int 	MAX_TEMPERATURE_TO_DISMANTLE_OVEN	= 40;		//! maximum temperature for dismantling oven
 	const float	MIN_CEILING_HEIGHT 					= 5;		//! min height of ceiling for fire to be ignited
 	//
@@ -91,9 +94,9 @@ class FBF_FireplaceBase extends ItemBase
 	const float TEMPERATURE_LOSS_MP_STONES			= 0.90;		//20% boost
 	const float TEMPERATURE_LOSS_MP_OVEN			= 0.75;		//50% boost
 
-	const float FUEL_BURN_RATE_DEFAULT				= 1.0;
-	const float FUEL_BURN_RATE_STONES				= 0.95;
-	const float FUEL_BURN_RATE_OVEN					= 0.85;
+	const float FUEL_BURN_RATE_DEFAULT				= 0.01;
+	const float FUEL_BURN_RATE_STONES				= 0.01;
+	const float FUEL_BURN_RATE_OVEN					= 0.01;
 	
 	//! cooking
 	const float PARAM_COOKING_TEMP_THRESHOLD		= 100;		//! temperature threshold for starting coooking process (degree Celsius)
@@ -104,6 +107,9 @@ class FBF_FireplaceBase extends ItemBase
 	const int 	TIMER_COOLING_UPDATE_INTERVAL 		= 2;		//! update interval duration of cooling process (seconds)
 	//! direct cooking slots
 	const int   DIRECT_COOKING_SLOT_COUNT			= 3;
+	const float	DIRECT_COOKING_SPEED				= 1.5;		// per second
+	const int   SMOKING_SLOT_COUNT					= 4;
+	const float SMOKING_SPEED 						= 1;		// per second
 
 	// stage lifetimes
 	const int   LIFETIME_FIREPLACE_STONE_CIRCLE		= 172800;
@@ -122,6 +128,7 @@ class FBF_FireplaceBase extends ItemBase
 	//Attachments
 	protected ItemBase m_CookingEquipment;
 	protected ItemBase m_DirectCookingSlots[DIRECT_COOKING_SLOT_COUNT];
+	protected ItemBase m_SmokingSlots[SMOKING_SLOT_COUNT];
 	protected ref FireConsumable m_ItemToConsume;
 	
 	//Particles - default for FireplaceBase
@@ -225,7 +232,6 @@ class FBF_FireplaceBase extends ItemBase
 	protected float m_TotalEnergy;
 	
 	FBF_LightBasic_Config config;
-	
 	//================================================================
 	// INIT / STORE LOAD-SAVE
 	//================================================================
@@ -245,7 +251,7 @@ class FBF_FireplaceBase extends ItemBase
 			
 			//define fuel types
 			m_FireConsumableTypes.Insert( ATTACHMENT_STICKS, 		new FireConsumableType( ATTACHMENT_STICKS, 		40, 	false,	"WoodenStick" ) );
-			m_FireConsumableTypes.Insert( ATTACHMENT_FIREWOOD, 		new FireConsumableType( ATTACHMENT_FIREWOOD, 	10000000, 	false,	"Firewood" ) );
+			m_FireConsumableTypes.Insert( ATTACHMENT_FIREWOOD, 		new FireConsumableType( ATTACHMENT_FIREWOOD, 	10000, 	false,	"Firewood" ) );
 		}
 
 		//calculate total energy
@@ -288,13 +294,14 @@ class FBF_FireplaceBase extends ItemBase
 			m_Light.SetVisibleDuringDaylight(config.VisibleDuringDaylight);			
 		}
     }
-	
+
 	override void EEInit()
 	{
 		super.EEInit();
-		
+
 		//refresh visual on init
 		RefreshFireplaceVisuals();
+
 	}	
 	
 	override void OnItemLocationChanged( EntityAI old_owner, EntityAI new_owner ) 
@@ -308,8 +315,9 @@ class FBF_FireplaceBase extends ItemBase
 	override void EEDelete( EntityAI parent )
 	{
 		super.EEDelete( parent );
-		
+
 		SetFireState( FBF_FireplaceFireState.NO_FIRE );
+
 		// cleanup particles (for cases of leaving burning fplace and going back outside of network bubble)
 		if ( !GetGame().IsMultiplayer() || GetGame().IsClient() )
 		{
@@ -446,7 +454,7 @@ class FBF_FireplaceBase extends ItemBase
 	//check fireplace types
 	override bool IsFireplace()
 	{
-		return false;
+		return true;
 	}
 	
 	bool IsBaseFireplace()
@@ -463,10 +471,20 @@ class FBF_FireplaceBase extends ItemBase
 	{
 		return false;
 	}
-	
+
 	bool IsIndoorOven()
 	{
 		return false;
+	}
+	
+	override bool CanHaveWetness()
+	{
+		return false;
+	}
+	
+	override bool CanHaveTemperature()
+	{
+		return true;
 	}
 	
 	//cooking equipment
@@ -490,6 +508,18 @@ class FBF_FireplaceBase extends ItemBase
 		for (int i = 0; i < DIRECT_COOKING_SLOT_COUNT; i++)
 		{
 			if ( m_DirectCookingSlots[i] )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool SmokingSlotsInUse()
+	{
+		for (int i = 0; i < SMOKING_SLOT_COUNT; i++)
+		{
+			if ( m_SmokingSlots[i] )
 			{
 				return true;
 			}
@@ -540,7 +570,7 @@ class FBF_FireplaceBase extends ItemBase
 					}
 					else
 					{
-						GetLightEntity().FadeBrightnessTo( FireplaceLight.m_FireplaceBrightness, 5 );
+						GetLightEntity().FadeBrightnessTo( FBF_FireplaceLight.m_FireplaceBrightness, 5 );
 					}
 				}
 				
@@ -558,14 +588,14 @@ class FBF_FireplaceBase extends ItemBase
 		else
 		{
 			//turn light off
-			if (GetLightEntity())
+			if ( GetLightEntity() )
 			{
 				GetLightEntity().FadeOut();
 			}
 		}
 		
 		//set default burn parameters based on fireplace type
-		if ( IsBarrelWithHoles() || IsFireplaceIndoor()  || IsIndoorOven() )
+		if ( IsBarrelWithHoles() || IsFireplaceIndoor() || IsIndoorOven() )
 		{
 			SetFuelBurnRateMP( FUEL_BURN_RATE_OVEN );
 			SetTemperatureLossMP( TEMPERATURE_LOSS_MP_OVEN );
@@ -633,10 +663,18 @@ class FBF_FireplaceBase extends ItemBase
 			//set burn parameters
 			SetFuelBurnRateMP( FUEL_BURN_RATE_OVEN );
 			SetTemperatureLossMP( TEMPERATURE_LOSS_MP_OVEN );
+			
+			//lock attachment slots
+			if ( m_OvenAttachmentsLockState != true )
+				LockOvenAttachments(true);
 		}
 		else
 		{
 			SetAnimationPhase( ANIMATION_OVEN, 1 );
+			
+			//unlock attachment slots
+			if ( m_OvenAttachmentsLockState != false )
+				LockOvenAttachments(false);
 		}
 		
 		// Stone circle state
@@ -678,7 +716,9 @@ class FBF_FireplaceBase extends ItemBase
 
 	//Refresh fireplace object physics
 	void RefreshFireplacePhysics()
-	{}
+	{
+	
+	}
 	
 	protected void RefreshFireParticlesAndSounds( bool force_refresh )
 	{
@@ -1127,7 +1167,6 @@ class FBF_FireplaceBase extends ItemBase
 		return air_res;
 	}
 	
-	
 	//Particle Positions
 	//Get local fire and smoke effect position
 	protected vector GetFireEffectPosition()
@@ -1289,10 +1328,6 @@ class FBF_FireplaceBase extends ItemBase
 			string message = "item type = " + item.GetType() + " m_RemainingEnergy = " + fire_consumable.GetRemainingEnergy().ToString() + " quantity = " + item.GetQuantity().ToString() + " amount = " + amount.ToString();
 			player.MessageAction ( message );
 			*/
-            if ( !HasAshes() )
-            {
-                SetAshesState( true );
-            }	
 			
 			if ( fire_consumable.GetRemainingEnergy() <= 0 || amount == 0 )
 			{
@@ -1614,7 +1649,7 @@ class FBF_FireplaceBase extends ItemBase
 	void StartFire( bool force_start = false )
 	{
 		//Print("Starting fire...");
-				
+		
 		//stop cooling process if active
 		if ( m_CoolingTimer )
 		{
@@ -1733,7 +1768,7 @@ class FBF_FireplaceBase extends ItemBase
 		//transfer heat to near players
 		TransferHeatToNearPlayers();
 		
-		//manage cooking equipment
+		//manage cooking equipment (this applies only for case of cooking pot on a tripod)
 		if ( m_CookingEquipment )
 		{
 			float cook_equip_temp = m_CookingEquipment.GetTemperature();
@@ -1763,12 +1798,13 @@ class FBF_FireplaceBase extends ItemBase
 			}
 			m_CookingEquipment.SetTemperature( cook_equip_temp );
 		}
+
+		float cook_item_temp;
+		int i;
 		// manage cooking on direct cooking slots
 		if ( DirectCookingSlotsInUse() )
 		{
-			float cook_item_temp;
-
-			for ( int i = 0; i < DIRECT_COOKING_SLOT_COUNT; i++ )
+			for ( i = 0; i < DIRECT_COOKING_SLOT_COUNT; i++ )
 			{
 				if ( m_DirectCookingSlots[i] )
 				{
@@ -1780,7 +1816,20 @@ class FBF_FireplaceBase extends ItemBase
 				}
 			}
 		}
+
+		// manage smoking slots
+		if ( SmokingSlotsInUse() )
+		{
+			for ( i = 0; i < SMOKING_SLOT_COUNT; i++ )
+			{
+				if ( m_SmokingSlots[i] )
+				{
+					SmokeOnSmokingSlot( m_SmokingSlots[i], cook_item_temp, temperature );
+				}
+			}
+		}
 	}
+
 	//Stop the fire process
 	// 1. start cooling
 	// 2. cooling
@@ -1805,7 +1854,7 @@ class FBF_FireplaceBase extends ItemBase
 		StartCooling();
 		
 		//Refresh fire visual
-		SetFireState( fire_state );		
+		SetFireState( fire_state );
 	}
 	
 	//Stop heating
@@ -1860,7 +1909,7 @@ class FBF_FireplaceBase extends ItemBase
 			//check wetness
 			//set wetness if raining and alter temperature modifier (which will lower temperature increase because of rain)
 			float rain = GetGame().GetWeather().GetRain().GetActual();
-			if (  IsRainingAbove() && !IsRoofAbove() )
+			if ( IsRainingAbove() && !IsRoofAbove() )
 			{
 				//set wet to fireplace
 				AddWetnessToFireplace( PARAM_WET_INCREASE_COEF * rain );
@@ -1896,12 +1945,14 @@ class FBF_FireplaceBase extends ItemBase
 					CookWithEquipment();
 				}
 			}
+
+			float cook_item_temp;
+			int i;
+
 			// manage cooking on direct cooking slots
 			if ( DirectCookingSlotsInUse() )
 			{
-				float cook_item_temp;
-
-				for ( int i = 0; i < DIRECT_COOKING_SLOT_COUNT; i++ )
+				for ( i = 0; i < DIRECT_COOKING_SLOT_COUNT; i++ )
 				{
 					if ( m_DirectCookingSlots[i] )
 					{
@@ -1910,6 +1961,18 @@ class FBF_FireplaceBase extends ItemBase
 						{
 							CookOnDirectSlot( m_DirectCookingSlots[i], cook_item_temp, temperature );
 						}
+					}
+				}
+			}
+
+			// manage smoking slots
+			if ( SmokingSlotsInUse() )
+			{
+				for ( i = 0; i < SMOKING_SLOT_COUNT; i++ )
+				{
+					if ( m_SmokingSlots[i] )
+					{
+						SmokeOnSmokingSlot( m_SmokingSlots[i], cook_item_temp, temperature );
 					}
 				}
 			}
@@ -1981,10 +2044,10 @@ class FBF_FireplaceBase extends ItemBase
 		{
 			m_CookingProcess = new Cooking();
 		}
-		
+
 		m_CookingProcess.CookWithEquipment ( m_CookingEquipment );
 	}
-	
+
 	Cooking GetCookingProcess()
 	{
 		if ( m_CookingProcess == NULL )
@@ -1994,7 +2057,7 @@ class FBF_FireplaceBase extends ItemBase
 		
 		return m_CookingProcess;
 	}
-		
+	
 	protected void CookOnDirectSlot( ItemBase slot_item, float temp_equip, float temp_ext )
 	{
 		if ( m_CookingProcess == NULL )
@@ -2026,13 +2089,27 @@ class FBF_FireplaceBase extends ItemBase
 			Edible_Base ingr = Edible_Base.Cast( slot_item );
 			if ( ingr )
 			{
-				m_CookingProcess.CookOnStick( ingr, 2.0 );
+				m_CookingProcess.CookOnStick( ingr, FireplaceBase.TIMER_HEATING_UPDATE_INTERVAL * FireplaceBase.DIRECT_COOKING_SPEED );
 			}
 			return;
 		}
-		
 	}
-
+	
+	protected void SmokeOnSmokingSlot( ItemBase slot_item, float temp_equip, float temp_ext )
+	{
+		if ( m_CookingProcess == NULL )
+		{
+			m_CookingProcess = new Cooking();
+		}
+		
+		// smoking slots accept only individual meat/fruit/veg items
+		Edible_Base ingr = Edible_Base.Cast( slot_item );
+		if ( ingr )
+		{
+			m_CookingProcess.SmokeItem( ingr, FireplaceBase.TIMER_HEATING_UPDATE_INTERVAL * FireplaceBase.SMOKING_SPEED );
+		}
+	}
+	
 	//================================================================
 	// FIRE VICINITY
 	//================================================================
@@ -2082,6 +2159,7 @@ class FBF_FireplaceBase extends ItemBase
 			AddWetnessToItem( attachment, -PARAM_WET_HEATING_DECREASE_COEF );		
 		}
 	}
+
 	//add temperature to item by fire
 	protected void AddTemperatureToItemByFire( ItemBase item )
 	{
@@ -2112,27 +2190,13 @@ class FBF_FireplaceBase extends ItemBase
 	//add damage to item by fire
 	protected void AddDamageToItemByFire( ItemBase item, bool can_be_ruined )
 	{
-		//if item can be cooked, burn it
-		if ( item.CanBeCooked() )
+
+		item.DecreaseHealth( PARAM_BURN_DAMAGE_COEF, false );
+
+		if ( item.CanBeCooked() & item.GetHealthLevel() >= GameConstants.STATE_BADLY_DAMAGED )
 		{
 			Edible_Base edible_item = Edible_Base.Cast( item );
 			edible_item.ChangeFoodStage( FoodStageType.BURNED );
-		}
-		//else add damage (max to BADLY_DAMAGED state)
-		else
-		{
-			float damage_amount = PARAM_BURN_DAMAGE_COEF * 100;
-			float min_health;
-			
-			if ( !can_be_ruined )
-			{
-				min_health = InjuryHandlerThresholds.RUINED * 100;
-			}
-				
-			if ( item.GetHealth() >= min_health + damage_amount )
-			{
-				item.DecreaseHealth( damage_amount, false );
-			}	
 		}
 	}
 	
@@ -2147,7 +2211,7 @@ class FBF_FireplaceBase extends ItemBase
 	
 	//add wetness on fireplace
 	void AddWetnessToFireplace( float amount )
-	{		
+	{
 	}	
 	
 	//transfer heat to all nearby players
@@ -2222,25 +2286,6 @@ class FBF_FireplaceBase extends ItemBase
 	//================================================================
 	// SUPPORT
 	//================================================================
-	//Check if object is under a roof (height check)
-	static void LineHit( EntityAI entity, float height, out bool hit, out float actual_height )
-	{
-		float start_pos_offset = 1.8;
-		vector from = entity.GetPosition();
-		vector to = entity.GetPosition();
-		from[1] = from[1] + start_pos_offset;		//add fireplace height into calculation
-		to[1] = to[1] + height;
-		vector contactPos;
-		vector contactDir;
-		int contactComponent;
-		
-		hit = DayZPhysics.RaycastRV( from, to, contactPos, contactDir, contactComponent, NULL, NULL, entity );
-		actual_height = vector.Distance( from, contactPos ) + start_pos_offset;
-		
-		//debug
-		//Print( "actual_height = " + actual_height.ToString() );
-	}
-
 	//Is player facing fireplace
 	bool IsFacingFireplace( PlayerBase player )
 	{
@@ -2281,33 +2326,19 @@ class FBF_FireplaceBase extends ItemBase
 
 	//Check if the weather is too windy
 	static bool IsWindy()
-	{
-		//check wind
-		float wind_speed = GetGame().GetWeather().GetWindSpeed();
-		float wind_speed_threshold = GetGame().GetWeather().GetWindMaximumSpeed() * 0.8;
-		
-		if ( wind_speed >= wind_speed_threshold )
-		{
-			return true;
-		}
-		
+	{		
 		return false;
 	}
 
 	//Check if the fireplace is too wet to be ignited
 	static bool IsEntityWet( notnull EntityAI entity_ai )
-	{
-		if ( entity_ai.GetWet() >= FBF_FireplaceBase.PARAM_MAX_WET_TO_IGNITE )
-		{
-			return true;
-		}
-		
+	{		
 		return false;
 	}
 	
 	bool IsWet()
 	{
-		return FBF_FireplaceBase.IsEntityWet( this );
+		return false;
 	}
 
 	//Check if there is any roof above fireplace
@@ -2325,23 +2356,18 @@ class FBF_FireplaceBase extends ItemBase
 	//Check if there is enough space for smoke
 	bool IsCeilingHighEnoughForSmoke()
 	{
-		return !MiscGameplayFunctions.IsUnderRoof( this, FBF_FireplaceBase.MIN_CEILING_HEIGHT );
+		return !MiscGameplayFunctions.IsUnderRoof( this, FireplaceBase.MIN_CEILING_HEIGHT );
 	}
 
 	//Check if it's raining and there is only sky above fireplace
 	static bool IsRainingAboveEntity( notnull EntityAI entity_ai )
-	{
-		if ( GetGame() && ( GetGame().GetWeather().GetRain().GetActual() >= FBF_FireplaceBase.PARAM_IGNITE_RAIN_THRESHOLD ) )
-		{
-			return true;
-		}
-		
+	{		
 		return false;
 	}
 	
 	bool IsRainingAbove()
 	{
-		return FireplaceBase.IsRainingAboveEntity( this );
+		return false;
 	}
 
 	//Check there is water surface bellow fireplace
@@ -2451,7 +2477,7 @@ class FBF_FireplaceBase extends ItemBase
 	//Action condition for dismantling oven
 	bool CanDismantleOven()
 	{
-		if ( IsOven() && !IsBurning() && !DirectCookingSlotsInUse() && GetTemperature() <= MAX_TEMPERATURE_TO_DISMANTLE_OVEN )
+		if ( IsOven() && !IsBurning() && !DirectCookingSlotsInUse() && !SmokingSlotsInUse() && GetTemperature() <= MAX_TEMPERATURE_TO_DISMANTLE_OVEN )
 		{
 			return true;
 		}
@@ -2482,7 +2508,7 @@ class FBF_FireplaceBase extends ItemBase
 	//Can extinguish fire
 	bool CanExtinguishFire()
 	{
-		return false;
+		return IsBurning();
 	}
 	
 	FBF_FireplaceLight GetLightEntity()
@@ -2499,23 +2525,15 @@ class FBF_FireplaceBase extends ItemBase
 	// ADVANCED PLACEMENT
 	//================================================================
 	
-	#ifdef DAYZ_1_09	
-	override void OnPlacementComplete(Man player)
+	override void OnPlacementComplete( Man player, vector position = "0 0 0", vector orientation = "0 0 0" )
 	{
-		super.OnPlacementComplete(player);
-		PlayerBase player_base = PlayerBase.Cast(player);
-		vector position = player_base.GetLocalProjectionPosition();
-		vector orientation = player_base.GetLocalProjectionOrientation();
-	#else
-	override void OnPlacementComplete(Man player, vector position = "0 0 0", vector orientation = "0 0 0")
-	{
-		super.OnPlacementComplete(player, position, orientation);
-	#endif
+		super.OnPlacementComplete( player, position, orientation );
+		
 		if ( GetGame().IsMultiplayer()  &&  GetGame().IsServer() || !GetGame().IsMultiplayer() )
 		{
 			//remove grass
 			Object cc_object = GetGame().CreateObjectEx( OBJECT_CLUTTER_CUTTER , position, ECE_PLACE_ON_SURFACE );
-			cc_object.SetOrientation ( orientation );
+			cc_object.SetOrientation( orientation );
 			GetGame().GetCallQueue( CALL_CATEGORY_GAMEPLAY ).CallLater( GetGame().ObjectDelete, 1000, false, cc_object );
 			
 			SetIsPlaceSound( true );
@@ -2544,7 +2562,7 @@ class FBF_FireplaceBase extends ItemBase
 	{
 		if ( GetGame() && GetGame().IsServer() )
 		{
-			SetQuantity( 1000 / m_TotalEnergy * GetQuantityMax() );
+			SetQuantity(1000);
 		}
 	}
 	
@@ -2553,5 +2571,37 @@ class FBF_FireplaceBase extends ItemBase
 		super.OnAttachmentQuantityChanged( item );
 		
 		CalcAndSetQuantity();
-	}	
+	}
+	
+	void LockOvenAttachments(bool lock)
+	{
+		//Print("LockOvenAttachments");
+		string path_cooking_equipment = "" + CFG_VEHICLESPATH + " " + GetType() + " GUIInventoryAttachmentsProps CookingEquipment attachmentSlots";
+		string path_direct_cooking = "" + CFG_VEHICLESPATH + " " + GetType() + " GUIInventoryAttachmentsProps DirectCooking attachmentSlots";
+		if ( GetGame().ConfigIsExisting(path_cooking_equipment) && GetGame().ConfigIsExisting(path_direct_cooking) )
+		{
+			array<string> arr_cooking_equipment = new array<string>;
+			array<string> arr_direct_cooking = new array<string>;
+			GetGame().ConfigGetTextArray(path_cooking_equipment,arr_cooking_equipment);
+			GetGame().ConfigGetTextArray(path_direct_cooking,arr_direct_cooking);
+			for ( int i = 0; i < arr_cooking_equipment.Count(); i++ )
+			{
+				if ( lock != GetInventory().GetSlotLock(InventorySlots.GetSlotIdFromString(arr_cooking_equipment[i])) )
+				{
+					GetInventory().SetSlotLock(InventorySlots.GetSlotIdFromString(arr_cooking_equipment[i]),lock);
+					//Print("attachment lock: " + arr_cooking_equipment[i] + " " + lock);
+				}
+			}
+			
+			for ( i = 0; i < arr_direct_cooking.Count(); i++ )
+			{
+				if ( lock == GetInventory().GetSlotLock(InventorySlots.GetSlotIdFromString(arr_direct_cooking[i])) )
+				{
+					GetInventory().SetSlotLock(InventorySlots.GetSlotIdFromString(arr_direct_cooking[i]),!lock);
+					//Print("attachment lock: " + arr_direct_cooking[i] + " " + !lock);
+				}
+			}
+		}
+		m_OvenAttachmentsLockState = lock;
+	}
 }

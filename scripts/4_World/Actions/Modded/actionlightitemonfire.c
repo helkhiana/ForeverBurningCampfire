@@ -7,7 +7,7 @@ modded class ActionLightItemOnFire: ActionContinuousBase
 		if ( target_item && item )
 		{
 			// when igniting item on the ground with igniter in hands
-			if ( !target_item.IsIgnited()  &&  !IsItemInCargoOfSomething(target_item)  &&  item.CanIgniteItem( target_item )  &&  target_item.CanBeIgnitedBy( item ) && target_item.IsKindOf( "FBF_FireplaceIndoor" ) )
+			if ( !target_item.IsIgnited()  &&  !IsItemInCargoOfSomething(target_item)  &&  item.CanIgniteItem( target_item )  &&  target_item.CanBeIgnitedBy( item ) && (target_item.IsKindOf( "FBF_FireplaceIndoor" ) || target_item.IsKindOf( "FBF_OvenIndoor" )))
 				return true;
 		}
 		

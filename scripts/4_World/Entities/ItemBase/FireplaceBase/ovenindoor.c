@@ -1,25 +1,25 @@
-class FBF_FireplaceIndoor extends FBF_FireplaceBase
+class FBF_OvenIndoor extends FBF_FireplaceBase
 {
 	protected float 				m_SmokePosX;
 	protected float 				m_SmokePosY;
 	protected float 				m_SmokePosZ;
 	protected int					m_FirePointIndex = 1;	//limited to 1 decimal place (1-9)
 	
-	static const string FIREPOINT_ACTION_SELECTION	= "fireplace_action";
-	static const string FIREPOINT_FIRE_POSITION 	= "fireplace_point";
-	static const string FIREPOINT_PLACE_ROT 		= "fireplace_rot";
-	static const string FIREPOINT_SMOKE_POSITION 	= "fireplace_smoke";
+	static const string OVENPOINT_ACTION_SELECTION	= "oven_action";
+	static const string OVENPOINT_FIRE_POSITION 	= "oven_point";
+	static const string OVENPOINT_PLACE_ROT 		= "oven_rot";
+	static const string OVENPOINT_SMOKE_POSITION 	= "oven_smoke";
 	
-	void FBF_FireplaceIndoor()
+	void FBF_OvenIndoor()
 	{
 		//Particles - default for FireplaceBase
-		PARTICLE_FIRE_START 	= ParticleList.HOUSE_FIRE_START;
-		PARTICLE_SMALL_FIRE 	= ParticleList.HOUSE_SMALL_FIRE;
-		PARTICLE_NORMAL_FIRE	= ParticleList.HOUSE_NORMAL_FIRE;
+		PARTICLE_FIRE_START 	= ParticleList.OVEN_FIRE_START;
+		PARTICLE_SMALL_FIRE 	= ParticleList.OVEN_SMALL_FIRE;
+		PARTICLE_NORMAL_FIRE	= ParticleList.OVEN_NORMAL_FIRE;
 		PARTICLE_SMALL_SMOKE 	= ParticleList.HOUSE_SMALL_SMOKE;
 		PARTICLE_NORMAL_SMOKE	= ParticleList.HOUSE_NORMAL_SMOKE;
-		PARTICLE_FIRE_END 		= ParticleList.HOUSE_FIRE_END;
-		PARTICLE_STEAM_END		= ParticleList.HOUSE_FIRE_STEAM_2END;		
+		PARTICLE_FIRE_END 		= ParticleList.OVEN_FIRE_END;
+		PARTICLE_STEAM_END		= ParticleList.BARREL_FIRE_STEAM_2END;
 		
 		//register sync variables
 		RegisterNetSyncVariableFloat( "m_SmokePosX", 0, 0, 2 );
@@ -98,8 +98,8 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 	static bool CanPlaceFireplaceInSelectedSpot( Object building, int fire_point_index, out vector fire_point_pos_world, out vector fire_point_rot_world )
 	{
 		//Get fire point index position
-		vector fire_point_pos = building.GetSelectionPositionMS( FIREPOINT_FIRE_POSITION + fire_point_index.ToString() );
-		vector fire_point_rot = building.GetSelectionPositionMS( FIREPOINT_PLACE_ROT + fire_point_index.ToString() );
+		vector fire_point_pos = building.GetSelectionPositionMS( OVENPOINT_FIRE_POSITION + fire_point_index.ToString() );
+		vector fire_point_rot = building.GetSelectionPositionMS( OVENPOINT_PLACE_ROT + fire_point_index.ToString() );
 		fire_point_pos_world = building.ModelToWorld( fire_point_pos );
 		fire_point_rot_world = building.ModelToWorld( fire_point_rot );
 		
@@ -112,7 +112,7 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 		{
 			Object object = nearest_objects.Get( i );
 			
-			if ( object.IsInherited( FireplaceIndoor ) )
+			if ( object.IsInherited( OvenIndoor ) )
 			{
 				return false;
 			}
@@ -146,12 +146,12 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 	override void ParticleNormalSmokeStart()
 	{
 		PlayParticle( m_ParticleNormalSmoke, PARTICLE_NORMAL_SMOKE, GetSmokeEffectPosition(), true );
-	}	
+	}
 
 	//================================================================
 	// STATE
 	//================================================================
-	override bool IsFireplaceIndoor()
+	override bool IsIndoorOven()
 	{
 		return true;
 	}
@@ -162,7 +162,7 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 	override bool CanReceiveAttachment( EntityAI attachment, int slotId )
 	{
 		if ( !super.CanReceiveAttachment(attachment, slotId) )
-			return false;	
+			return false;
 		
 		ItemBase item = ItemBase.Cast( attachment );
 		
@@ -184,7 +184,7 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 	override bool CanLoadAttachment( EntityAI attachment )
 	{
 		if ( !super.CanLoadAttachment(attachment) )
-			return false;	
+			return false;
 		
 		ItemBase item = ItemBase.Cast( attachment );
 		
@@ -202,15 +202,13 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 		
 		return false;
 	}
-	
-	override bool CanReleaseAttachment(EntityAI attachment)
-	{
-		ItemBase item = ItemBase.Cast(attachment);
 
-		if (item.IsKindOf("FBF_Pot") || item.IsKindOf("FBF_FryingPan"))
-		{
+	override bool CanReleaseAttachment( EntityAI attachment )
+	{
+		if( !super.CanReleaseAttachment( attachment ) )
 			return false;
-		}
+		
+		ItemBase item = ItemBase.Cast( attachment );
 		
 		//has last attachment and there are still items in cargo
 		if ( GetInventory().AttachmentCount() == 1 && GetInventory().GetCargo().GetItemCount() != 0 )
@@ -280,17 +278,12 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 			AddToFireConsumables ( item_base );
 		}
 		
-		// direct cooking slots, smoking slots
+		// direct cooking slots
 		bool edible_base_attached = false;
 		switch ( slot_name )
 		{
 			case "DirectCookingA":
 				m_DirectCookingSlots[0] = item_base;
-				edible_base_attached = true;
-				break;
-
-			case "DirectCookingB":
-				m_DirectCookingSlots[1] = item_base;
 				edible_base_attached = true;
 				break;
 
@@ -301,16 +294,6 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 
 			case "SmokingB":
 				m_SmokingSlots[1] = item_base;
-				edible_base_attached = true;
-				break;
-
-			case "SmokingC":
-				m_SmokingSlots[2] = item_base;
-				edible_base_attached = true;
-				break;
-
-			case "SmokingD":
-				m_SmokingSlots[3] = item_base;
 				edible_base_attached = true;
 				break;
 		}
@@ -356,14 +339,6 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 			case "DirectCookingA":
 				m_DirectCookingSlots[0] = NULL;
 				break;
-
-			case "DirectCookingB":
-				m_DirectCookingSlots[1] = NULL;
-				break;
-
-			case "DirectCookingC":
-				m_DirectCookingSlots[2] = NULL;
-				break;
 		}
 
 		// smoking slots
@@ -376,14 +351,6 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 			case "SmokingB":
 				m_SmokingSlots[1] = NULL;
 				break;
-
-			case "SmokingC":
-				m_SmokingSlots[2] = NULL;
-				break;
-
-			case "SmokingD":
-				m_SmokingSlots[3] = NULL;
-				break;
 		}
 
 		// food on direct cooking slots (removal of sound effects)
@@ -392,7 +359,7 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 			Edible_Base food_on_dcs = Edible_Base.Cast( item_base );
 			food_on_dcs.MakeSoundsOnClient( false );
 		}
-		
+
 		// cookware-specifics (remove audio visuals)
 		if ( item_base.Type() == ATTACHMENT_COOKING_POT )
 		{	
@@ -422,7 +389,23 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 	{
 		return true;
 	}
+	
+	//cargo item into/outo this.Cargo
+	override bool CanReceiveItemIntoCargo( EntityAI item )
+	{
+		return super.CanReceiveItemIntoCargo( item );
+	}
+/*
+	override bool CanReleaseCargo( EntityAI cargo )
+	{
+		if ( IsBurning() )
+		{
+			return false;
+		}
 
+		return true;
+	}
+*/	
 	//hands
 	override bool CanPutIntoHands( EntityAI parent )
 	{
@@ -495,5 +478,8 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 	override void SetActions()
 	{
 		super.SetActions();
+		
+		//AddAction(ActionTakeOvenIndoor);
+		//AddAction(ActionLightItemOnFire);
 	}
 }
