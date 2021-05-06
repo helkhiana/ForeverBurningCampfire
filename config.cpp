@@ -73,7 +73,7 @@ class CfgVehicles
 		varQuantityMin=0;
 		varQuantityMax=100;
 		varQuantityDestroyOnMin=0;
-		varTemperatureMax=500;
+		varTemperatureMax=1000;
 		absorbency=0;
 		forceFarBubble="true";
 		itemBehaviour=2;

@@ -83,7 +83,7 @@ class FBF_FireplaceBase extends ItemBase
 	const float	PARAM_ITEM_HEAT_MIN_TEMP			= 40;		//! minimum temperature for items that can be heated in fireplace cargo or as attachments (degree Celsius)
 	const float PARAM_MAX_ITEM_HEAT_TEMP_INCREASE	= 200;		//! maximum value of temperature of items in fireplace when heating (degree Celsius)
 	const float PARAM_HEAT_RADIUS 					= 6.0;		//! radius in which objects are heated by fire
-	const float PARAM_HEAT_THROUGH_AIR_COEF			= 0.035;	//! value for calculation of heat transfered from fireplace through air to player (environment)
+	const float PARAM_HEAT_THROUGH_AIR_COEF			= 0.055;	//! value for calculation of heat transfered from fireplace through air to player (environment)
 	//! 
 	const int 	MIN_STONES_TO_BUILD_CIRCLE			= 8;		//! minimum amount of stones for circle
 	const int 	MIN_STONES_TO_BUILD_OVEN			= 16;		//! minimum amount of stones for oven

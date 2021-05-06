@@ -17,11 +17,11 @@ class FBF_FireplaceIgnited extends FBF_FireplaceBase
 		return true;
 	}
 
-	override void EEInit(){
+	override void EEInit()
+	{
 		super.EEInit();
 		this.GetInventory().CreateAttachment("FireWood");
 		this.GetInventory().CreateAttachment("Paper");
-		this.GetInventory().CreateAttachment("Stone");
 		this.GetInventory().CreateAttachment("Tripod");
 		this.SetStoneCircleState( true );
         this.SetLifetime(7888000);
