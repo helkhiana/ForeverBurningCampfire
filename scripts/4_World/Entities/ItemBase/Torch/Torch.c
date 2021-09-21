@@ -22,7 +22,6 @@ class FBF_Torch_Base : House
     FBF_TorchLight m_Light;
 	Particle m_FireParticle;
 	vector m_ParticleLocalPos;
-	FBF_LightBasic_Config config;
 	
 	void FBF_Torch_Base()
 	{
@@ -31,29 +30,9 @@ class FBF_Torch_Base : House
             m_ParticleLocalPos = GetParticleLocalPos();
 			m_Light = FBF_TorchLight.Cast( ScriptedLightBase.CreateLight( FBF_TorchLight, "0 0 0" ) );
 			m_Light.AttachOnObject(this, m_ParticleLocalPos + Vector (0,0.2,0));
-            m_FireParticle = Particle.PlayOnObject(ParticleList.TORCH_T1, this, m_ParticleLocalPos, Vector(0,0,0), true);            
-			SetLightCustomSettings();
-			if (!config)
-				GetGame().GetCallQueue( CALL_CATEGORY_GAMEPLAY ).CallLater( SetLightCustomSettings, 500, false );
+            m_FireParticle = Particle.PlayOnObject(ParticleList.TORCH_T1, this, m_ParticleLocalPos, Vector(0,0,0), true);            			
 		}
 	}
-	
-	void GetConfig()
-	{
-		config = g_Game.GetFBFConfig().Get_TorchLight_Config();
-	}
-
-    void SetLightCustomSettings()
-    {	
-		GetConfig();
-        if(config)
-		{
-			m_Light.SetRadiusTo(config.Radius);
-			m_Light.SetCastShadow(config.WithShadows);
-			m_Light.SetBrightnessTo(config.Brightness);
-			m_Light.SetVisibleDuringDaylight(config.VisibleDuringDaylight);			
-		}		
-    }
     
     vector GetParticleLocalPos()
     {

@@ -24,7 +24,6 @@ class FBF_Campfire_Base : House
 	Particle m_SmokeParticle;
     protected ref Timer m_HeatingTimer;
 	protected EffectSound m_SoundFireLoop;
-	FBF_LightBasic_Config config;
 	const int 	TIMER_HEATING_UPDATE_INTERVAL 		= 5;
 	const float PARAM_HEAT_RADIUS 					= 3.0;
 	const float PARAM_HEAT_THROUGH_AIR_COEF			= 0.08;
@@ -37,33 +36,13 @@ class FBF_Campfire_Base : House
 			m_Light = FBF_CampfireLight.Cast( ScriptedLightBase.CreateLight( FBF_CampfireLight, "0 0 0" ) );
 			m_Light.AttachOnMemoryPoint(this, "light");
             m_FireParticle = Particle.PlayOnObject(ParticleList.CAMP_NORMAL_FIRE, this, Vector( 0, 0.05, 0 ), Vector(0,0,0), true);            
-            m_SmokeParticle = Particle.PlayOnObject(ParticleList.CAMP_NORMAL_SMOKE, this, Vector( 0, 0.05, 0 ), Vector(0,0,0), true);
-			SetLightCustomSettings();
-			if (!config)
-				GetGame().GetCallQueue( CALL_CATEGORY_GAMEPLAY ).CallLater( SetLightCustomSettings, 500, false );
+            m_SmokeParticle = Particle.PlayOnObject(ParticleList.CAMP_NORMAL_SMOKE, this, Vector( 0, 0.05, 0 ), Vector(0,0,0), true);			
 		}
         if(GetGame().IsMultiplayer() || GetGame().IsServer())
         {
             StartHeating();
         }
 	}
-	
-	void GetConfig()
-	{
-		config = g_Game.GetFBFConfig().Get_CampfireLight_Config();
-	}
-
-    void SetLightCustomSettings()
-    {	
-		GetConfig();
-        if(config)
-		{
-			m_Light.SetRadiusTo(config.Radius);
-			m_Light.SetCastShadow(config.WithShadows);
-			m_Light.SetBrightnessTo(config.Brightness);
-			m_Light.SetVisibleDuringDaylight(config.VisibleDuringDaylight);			
-		}		
-    }
 
 	override void EEInit(){
 		super.EEInit();

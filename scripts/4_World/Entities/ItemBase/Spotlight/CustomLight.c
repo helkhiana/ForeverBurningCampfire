@@ -2,7 +2,6 @@ class FBF_CustomAreaLight_Base : House
 {
     FBF_AreaPointLight m_Light;
 	vector m_LocalPos;
-	FBF_LightColoured_Config config;
 	
 	void FBF_CustomAreaLight_Base()
 	{
@@ -11,41 +10,15 @@ class FBF_CustomAreaLight_Base : House
             m_LocalPos = Vector(0, 1.5, 0);
 			m_Light = FBF_AreaPointLight.Cast( ScriptedLightBase.CreateLight( FBF_AreaPointLight, "0 0 0") );
 			m_Light.AttachOnObject(this, m_LocalPos, "180 0 0");
-			SetLightCustomSettings();
-			SetLightColours();
-			if (!config)
-			{
-				GetGame().GetCallQueue( CALL_CATEGORY_GAMEPLAY ).CallLater( SetLightCustomSettings, 500, false );
-				GetGame().GetCallQueue( CALL_CATEGORY_GAMEPLAY ).CallLater( SetLightColours, 500, false );
-			}
-		}        
-	}
-
-	void GetConfig()
-	{
-		config = g_Game.GetFBFConfig().Get_CustomLight1_Config();
-	}
-
-    void SetLightCustomSettings()
-    {	
-		GetConfig();
-        if(config)
-		{
-			m_Light.SetRadiusTo(config.Radius);
-			m_Light.SetCastShadow(config.WithShadows);
-			m_Light.SetBrightnessTo(config.Brightness);
-			m_Light.SetVisibleDuringDaylight(config.VisibleDuringDaylight);			
+			SetLightColours();		
 		}		
-    }
+	}
 
-    void SetLightColours()
-    {
-		if(config)
-		{
-			m_Light.SetAmbientColor(config.DiffuseColorRed, config.DiffuseColorGreen, config.DiffuseColorBlue);
-			m_Light.SetDiffuseColor(config.DiffuseColorRed, config.DiffuseColorGreen, config.DiffuseColorBlue);
-		}
-    }
+	void SetLightColours()
+	{
+		m_Light.SetAmbientColor(0.8, 0.9, 1.0);
+        m_Light.SetDiffuseColor(0.8, 0.9, 1.0);
+	}
 
 	override void EEDelete(EntityAI parent)
 	{
@@ -59,39 +32,44 @@ class FBF_CustomAreaLight_Base : House
 
 class FBF_CustomAreaLight_1 : FBF_CustomAreaLight_Base 
 {
-	override void GetConfig()
+	override void SetLightColours()
 	{
-		config = g_Game.GetFBFConfig().Get_CustomLight1_Config();
+		m_Light.SetAmbientColor(1.0, 0, 0);
+        m_Light.SetDiffuseColor(1.0, 0, 0);
 	}
 };
 class FBF_CustomAreaLight_2 : FBF_CustomAreaLight_1 
 {
-	override void GetConfig()
+	override void SetLightColours()
 	{
-		config = g_Game.GetFBFConfig().Get_CustomLight2_Config();
+		m_Light.SetAmbientColor(0, 1.0, 0);
+        m_Light.SetDiffuseColor(0, 1.0, 0);
 	}
 };
 
 class FBF_CustomAreaLight_3 : FBF_CustomAreaLight_1 
 {
-	override void GetConfig()
+	override void SetLightColours()
 	{
-		config = g_Game.GetFBFConfig().Get_CustomLight3_Config();
+		m_Light.SetAmbientColor(0, 0, 1.0);
+        m_Light.SetDiffuseColor(0, 0, 1.0);
 	}
 };
 
 class FBF_CustomAreaLight_4 : FBF_CustomAreaLight_1 
 {
-	override void GetConfig()
+	override void SetLightColours()
 	{
-		config = g_Game.GetFBFConfig().Get_CustomLight4_Config();
+		m_Light.SetAmbientColor(0.8, 0, 0.2);
+        m_Light.SetDiffuseColor(0.8, 0, 0.2);
 	}
 };
 
 class FBF_CustomAreaLight_5 : FBF_CustomAreaLight_1 
 {
-	override void GetConfig()
+	override void SetLightColours()
 	{
-		config = g_Game.GetFBFConfig().Get_CustomLight5_Config();
+		m_Light.SetAmbientColor(1.0, 1.0, 1.0);
+        m_Light.SetDiffuseColor(1.0, 1.0, 1.0);
 	}
 };

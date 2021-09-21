@@ -587,11 +587,12 @@ class CfgVehicles
 		physLayer="item_small";
 	};
 
-	class FBF_LongTorch: FBF_Torch
+	class FBF_LongTorch: HouseNoDestruct
 	{
 		displayName="$STR_cfgvehicles_long_torch";
 		descriptionShort="$STR_cfgvehicles_long_torch_desc";
 		model="\dz\gear\crafting\LongTorch.p3d";
+		physLayer="item_small";
 	};
 
 	class FBF_Static_Campfire: HouseNoDestruct
@@ -767,239 +768,34 @@ class CfgVehicles
 		scope=1;
 		physLayer="item_small";
 	};
-	class FBF_AreaLight_Warm: FBF_AreaLight_White {};
-	class FBF_CustomAreaLight_1: FBF_AreaLight_White {};
-	class FBF_CustomAreaLight_2: FBF_AreaLight_White {};
-	class FBF_CustomAreaLight_3: FBF_AreaLight_White {};
-	class FBF_CustomAreaLight_4: FBF_AreaLight_White {};
-	class FBF_CustomAreaLight_5: FBF_AreaLight_White {};
-	class FBF_DynamicAreaLight_Base: HouseNoDestruct
+	class FBF_AreaLight_Warm: HouseNoDestruct
 	{
 		scope=1;
 		physLayer="item_small";
 	};
-
-	
-	class FBF_Xmas_lights: HouseNoDestruct
-	{
-		scope = 1;
-		model = "\DZ\gear\camping\proxies\xmass_lights.p3d";
-	};
-
-	class FBF_LargeTent_Lights: HouseNoDestruct
+	class FBF_CustomAreaLight_1: HouseNoDestruct
 	{
 		scope=1;
-		model="\DZ\gear\camping\LargeTent.p3d";
-		hiddenSelections[]=
-		{
-			"entrancec",
-			"camo",
-			"bags",
-			"xlights_glass_r",
-			"xlights_glass_g",
-			"xlights_glass_b",
-			"xlights_glass_y"
-		};
-		hiddenSelectionsTextures[]=
-		{
-			"dz\gear\camping\data\tent_door_co.paa",
-			"",
-			"dz\gear\camping\data\bagpack_co.paa"
-		};
-		hiddenSelectionsMaterials[]=
-		{
-			"dz\gear\camping\data\tent_door.rvmat",
-			"dz\gear\camping\data\large_tent.rvmat",
-			"dz\gear\camping\data\bagpack.rvmat"
-		};
-		placement="ForceSlopeOnTerrain";
-		physLayer="item_large";
-		class PointLights
-		{
-			class PointLight
-			{
-				color[]={1,1,1,0.050000001};
-				ambient[]={0.0099999998,0.0099999998,0.0099999998,0.0099999998};
-				position="light";
-				hitpoint="bulb";
-				selection="bulb";
-				size=0;
-				radius=5;
-				brightness=0.001;
-				dayLight=1;
-				heatHazeRadius=0;
-				heatHazePower=0;
-				fireEffect=0;
-				fireEffectOctaves=0;
-				fireEffectPersistence=0;
-				fireEffectFract=0;
-			};
-		};
-		class AnimationSources
-		{
-			class Body
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class CamoNet
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class Inventory
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class EntranceO
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class EntranceC
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class Window1O
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class Window2O
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class Window3O
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class Window4O
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class Window5O
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class Window6O
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class Window7O
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class Window1C
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class Window2C
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class Window3C
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class Window4C
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class Window5C
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class Window6C
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class Window7C
-			{
-				source="user";
-				animPeriod=0.0099999998;
-				initPhase=1;
-			};
-			class Xlights
-			{
-				source="user";
-				initPhase=0;
-				animPeriod=0.0099999998;
-			};
-			class Xlights_glass_r
-			{
-				source="user";
-				initPhase=0;
-				animPeriod=0.0099999998;
-			};
-			class Xlights_glass_g
-			{
-				source="user";
-				initPhase=0;
-				animPeriod=0.0099999998;
-			};
-			class Xlights_glass_b
-			{
-				source="user";
-				initPhase=0;
-				animPeriod=0.0099999998;
-			};
-			class Xlights_glass_y
-			{
-				source="user";
-				initPhase=0;
-				animPeriod=0.0099999998;
-			};
-			class Cord_folded
-			{
-				source="user";
-				initPhase=1;
-				animPeriod=0.0099999998;
-			};
-			class Cord_plugged
-			{
-				source="user";
-				initPhase=1;
-				animPeriod=0.0099999998;
-			};
-			class Pack
-			{
-				source="user";
-				initPhase=1;
-				animPeriod=0.0099999998;
-			};
-		};
+		physLayer="item_small";
 	};
-
+	class FBF_CustomAreaLight_2: HouseNoDestruct
+	{
+		scope=1;
+		physLayer="item_small";
+	};
+	class FBF_CustomAreaLight_3: HouseNoDestruct
+	{
+		scope=1;
+		physLayer="item_small";
+	};
+	class FBF_CustomAreaLight_4: HouseNoDestruct
+	{
+		scope=1;
+		physLayer="item_small";
+	};
+	class FBF_CustomAreaLight_5: HouseNoDestruct
+	{
+		scope=1;
+		physLayer="item_small";
+	};
 };

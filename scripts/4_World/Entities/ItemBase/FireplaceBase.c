@@ -230,8 +230,6 @@ class FBF_FireplaceBase extends ItemBase
 	
 	//quantity
 	protected float m_TotalEnergy;
-	
-	FBF_LightBasic_Config config;
 	//================================================================
 	// INIT / STORE LOAD-SAVE
 	//================================================================
@@ -272,28 +270,8 @@ class FBF_FireplaceBase extends ItemBase
 		RegisterNetSyncVariableBool( "m_RoofAbove" );
 		RegisterNetSyncVariableInt( "m_FireState", FBF_FireplaceFireState.NO_FIRE, FBF_FireplaceFireState.COUNT );
 		RegisterNetSyncVariableBool( "m_IsSoundSynchRemote" );
-		RegisterNetSyncVariableBool( "m_IsPlaceSound" );
-		SetLightCustomSettings();
-		if (!config)
-			GetGame().GetCallQueue( CALL_CATEGORY_GAMEPLAY ).CallLater( SetLightCustomSettings, 500, false );
+		RegisterNetSyncVariableBool( "m_IsPlaceSound" );		
 	}
-
-	void GetConfig()
-	{
-		config = g_Game.GetFBFConfig().Get_FireplaceLight_Config();
-	}
-
-	void SetLightCustomSettings()
-    {	
-		GetConfig();
-        if(config && m_Light)
-		{
-			m_Light.SetRadiusTo(config.Radius);
-			m_Light.SetCastShadow(config.WithShadows);
-			m_Light.SetBrightnessTo(config.Brightness);
-			m_Light.SetVisibleDuringDaylight(config.VisibleDuringDaylight);			
-		}
-    }
 
 	override void EEInit()
 	{
