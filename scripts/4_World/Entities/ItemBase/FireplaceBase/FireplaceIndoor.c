@@ -25,9 +25,10 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 		RegisterNetSyncVariableFloat( "m_SmokePosX", 0, 0, 2 );
 		RegisterNetSyncVariableFloat( "m_SmokePosY", 0, 0, 2 );
 		RegisterNetSyncVariableFloat( "m_SmokePosZ", 0, 0, 2 );
-		RegisterNetSyncVariableInt( "m_FirePointIndex", 1, 9 );
+		RegisterNetSyncVariableInt( "m_FirePointIndex", 0, 9 );
 		
 		m_LightDistance = 50;
+		m_RoofAbove = true;
 	}
 	
 	//================================================================
@@ -53,7 +54,7 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 
 		//--- Fireplace Indoor data ---
 		//fire point name
-		if( !ctx.Read( m_FirePointIndex ) )
+		if ( !ctx.Read( m_FirePointIndex ) )
 		{
 			m_FirePointIndex = 1;		//set default
 			return false;
@@ -106,7 +107,7 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 		//check if there is any FireplaceIndoor objects near selected fire point
 		ref array<Object> nearest_objects = new array<Object>;
 		ref array<CargoBase> proxy_cargos = new array<CargoBase>;
-		GetGame().GetObjectsAtPosition3D( fire_point_pos_world, 1, nearest_objects, proxy_cargos );
+		GetGame().GetObjectsAtPosition3D( fire_point_pos_world, 0.25, nearest_objects, proxy_cargos );
 
 		for ( int i = 0; i < nearest_objects.Count(); ++i )
 		{
@@ -154,117 +155,6 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 	override bool IsFireplaceIndoor()
 	{
 		return true;
-	}
-
-	//================================================================
-	// ATTACHMENTS
-	//================================================================	
-	override bool CanReceiveAttachment( EntityAI attachment, int slotId )
-	{
-		if ( !super.CanReceiveAttachment(attachment, slotId) )
-			return false;	
-		
-		ItemBase item = ItemBase.Cast( attachment );
-		
-		//kindling items
-		if ( IsKindling ( item ) )
-			return true;
-		
-		//fuel items
-		if ( IsFuel ( item ) )
-			return true;
-		
-		//direct cooking slots
-		if ( ( item.Type() == ATTACHMENT_COOKING_POT ) || ( item.Type() == ATTACHMENT_FRYING_PAN ) || ( item.IsKindOf( "Edible_Base" ) ) )
-			return true;
-		
-		return false;
-	}
-	
-	override bool CanLoadAttachment( EntityAI attachment )
-	{
-		if ( !super.CanLoadAttachment(attachment) )
-			return false;	
-		
-		ItemBase item = ItemBase.Cast( attachment );
-		
-		//kindling items
-		if ( IsKindling ( item ) )
-			return true;
-		
-		//fuel items
-		if ( IsFuel ( item ) )
-			return true;
-		
-		//direct cooking slots
-		if ( ( item.Type() == ATTACHMENT_COOKING_POT ) || ( item.Type() == ATTACHMENT_FRYING_PAN ) || ( item.IsKindOf( "Edible_Base" ) ) )
-			return true;
-		
-		return false;
-	}
-	
-	override bool CanReleaseAttachment(EntityAI attachment)
-	{
-		ItemBase item = ItemBase.Cast(attachment);
-
-		if (item.IsKindOf("FBF_Pot") || item.IsKindOf("FBF_FryingPan"))
-		{
-			return false;
-		}
-		
-		//has last attachment and there are still items in cargo
-		if ( GetInventory().AttachmentCount() == 1 && GetInventory().GetCargo().GetItemCount() != 0 )
-		{
-			return false;
-		}
-		
-		//kindling items
-		if ( IsKindling ( item ) && !IsBurning() )
-		{
-			if ( HasLastFuelKindlingAttached() )
-			{
-				if ( HasLastAttachment() )
-				{
-					return true;
-				}
-				else
-				{
-					return false;
-				}
-			}
-			else
-			{
-				return true;
-			}
-		}
-		
-		//fuel items
-		if ( IsFuel( item ) && !IsBurning() )
-		{
-			if ( HasLastFuelKindlingAttached() )
-			{	
-				if ( HasLastAttachment() )
-				{
-					return true;
-				}
-				else
-				{
-					return false;
-				}
-			}
-			else
-			{
-				return true;
-			}
-		}
-		
-		//direct cooking slots
-		if ( ( item.Type() == ATTACHMENT_COOKING_POT ) || ( item.Type() == ATTACHMENT_FRYING_PAN ) || ( item.IsKindOf( "Edible_Base" ) ) )
-		{
-			return true;
-		}
-		
-		return false;
 	}
 
 	override void EEItemAttached( EntityAI item, string slot_name ) 
@@ -332,7 +222,7 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 
 	override void EEItemDetached( EntityAI item, string slot_name ) 
 	{
-		super.EEItemDetached ( item, slot_name );
+		super.EEItemDetached( item, slot_name );
 		
 		ItemBase item_base = ItemBase.Cast( item );
 		
@@ -343,13 +233,8 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 			RemoveFromFireConsumables( GetFireConsumableByItem( item_base ) );
 		}
 		
-		//no attachments left & no ashes are present
-		if ( GetInventory().AttachmentCount() == 0 && !HasAshes() )
-		{
-			//destroy fireplace
-			DestroyFireplace();
-		}
-
+		CheckForDestroy();
+		
 		// direct cooking slots
 		switch ( slot_name )
 		{
@@ -386,18 +271,16 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 				break;
 		}
 
-		// food on direct cooking slots (removal of sound effects)
-		if ( item_base.IsKindOf( "Edible_Base" ) )
-		{
-			Edible_Base food_on_dcs = Edible_Base.Cast( item_base );
-			food_on_dcs.MakeSoundsOnClient( false );
-		}
-		
 		// cookware-specifics (remove audio visuals)
 		if ( item_base.Type() == ATTACHMENT_COOKING_POT )
 		{	
 			Bottle_Base cooking_pot = Bottle_Base.Cast( item );
 			cooking_pot.RemoveAudioVisualsOnClient();	
+		}
+		if ( item_base.Type() == ATTACHMENT_CAULDRON )
+		{	
+			Bottle_Base cauldron = Bottle_Base.Cast( item );
+			cauldron.RemoveAudioVisualsOnClient();	
 		}
 		if ( item_base.Type() == ATTACHMENT_FRYING_PAN )
 		{	
@@ -422,14 +305,30 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 	{
 		return true;
 	}
+	
+	//cargo item into/outo this.Cargo
+	override bool CanReceiveItemIntoCargo( EntityAI item )
+	{
+		return super.CanReceiveItemIntoCargo( item );
+	}
+/*
+	override bool CanReleaseCargo( EntityAI cargo )
+	{
+		if ( IsBurning() )
+		{
+			return false;
+		}
 
+		return true;
+	}
+*/	
 	//hands
 	override bool CanPutIntoHands( EntityAI parent )
 	{
 		return false;
 	}
 	
-	override bool CanRemoveFromHands ( EntityAI player ) 
+	override bool CanRemoveFromHands( EntityAI player ) 
 	{
 		return false;
 	}
@@ -477,6 +376,9 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 	
 	override bool IsThisIgnitionSuccessful( EntityAI item_source = NULL )
 	{
+		SetIgniteFailure( false );
+		Param1<bool> failure;
+		
 		//check kindling
 		if ( !HasAnyKindling() )
 		{
@@ -486,14 +388,60 @@ class FBF_FireplaceIndoor extends FBF_FireplaceBase
 		//check wetness
 		if ( IsWet() )
 		{
+			SetIgniteFailure( true );
+			
+			failure = new Param1<bool>( GetIgniteFailure() );
+			GetGame().RPCSingleParam( this, FirePlaceFailure.WET, failure, true );
 			return false;
 		}
 		
 		return true;	
 	}
 	
+	override void OnRPC( PlayerIdentity sender, int rpc_type, ParamsReadContext ctx ) 
+	{
+		super.OnRPC( sender, rpc_type, ctx );
+		
+		ref Param1<bool> p = new Param1<bool>(false);
+				
+		if (ctx.Read(p))
+		{
+			bool failure = p.param1;
+		}
+		
+		switch ( rpc_type )
+		{
+			case FirePlaceFailure.WIND:
+			
+				if ( failure )
+				{
+					ParticleFireWindyNoIgniteStart();
+					SoundFireStop();
+					SoundFireWindyNoIgniteStart();
+					SoundFireNoFireStart();
+				}
+			
+			break;
+			
+			case FirePlaceFailure.WET:
+				
+				if ( failure )
+				{
+					ParticleWetNoIgniteStart();
+					SoundFireStop();
+					SoundFireWetNoIgniteStart();
+					SoundFireNoFireStart();
+				}
+			
+			break;
+		}
+	}
+	
 	override void SetActions()
 	{
 		super.SetActions();
+		
+		//AddAction(ActionTakeFireplaceIndoor);
+		//AddAction(ActionLightItemOnFire);
 	}
 }
