@@ -4,9 +4,8 @@ class FBF_AreaPointLight extends PointLightBase
 	{
 		SetVisibleDuringDaylight(false);
 		SetRadiusTo(100);
-		SetBrightnessTo(10);
 		SetCastShadow(false);
-		SetBrightnessTo(10.0);
+		SetBrightnessTo(5.0);
 		SetFadeOutTime(5);
 		SetDiffuseColor(1.0, 0.5, 0.3);
 		SetAmbientColor(1.0, 0.5, 0.3);
