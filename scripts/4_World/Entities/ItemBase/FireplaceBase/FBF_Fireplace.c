@@ -11,7 +11,7 @@ class FBF_Fireplace extends Fireplace
 				firewood.SetQuantity(firewood.GetQuantityMax())
 			}
 			GetInventory().CreateAttachment("Paper");
-			SetLifetime(7888000);
+			SetLifetime(3600 * 24 * 100);
 			Synchronize();
 		}
 	}
@@ -83,6 +83,14 @@ class FBF_Fireplace extends Fireplace
 
 class FBF_FireplaceIndoor extends FireplaceIndoor
 {
+	override void DeferredInit()
+	{
+		super.DeferredInit();
+		if(GetGame().IsServer())
+		{
+			SetLifetime(3600 * 24 * 100);
+		}
+	}
     override bool CanReleaseAttachment( EntityAI attachment )
 	{
 		ItemBase item = ItemBase.Cast( attachment );
@@ -150,6 +158,15 @@ class FBF_FireplaceIndoor extends FireplaceIndoor
 
 class FBF_OvenIndoor extends OvenIndoor
 {
+	override void DeferredInit()
+	{
+		super.DeferredInit();
+		if(GetGame().IsServer())
+		{
+			SetLifetime(3600 * 24 * 100);
+		}
+	}
+
     override bool CanReleaseAttachment( EntityAI attachment )
 	{
 		ItemBase item = ItemBase.Cast( attachment );

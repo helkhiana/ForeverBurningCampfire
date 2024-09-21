@@ -76,21 +76,24 @@ class CfgVehicles
 	{
 		scope=2;
 		displayName="Fawkes Campfire";
-		descriptionShort="This campfire was made by Jamison Fawkes himself. It will burn forever once ignited.";		
+		descriptionShort="This campfire was made by Jamison Fawkes himself. It will burn forever once ignited.";	
+		varWetMax=0;	
 	};
 	
 	class FBF_FireplaceIndoor: FireplaceIndoor
 	{
 		scope=2;
 		displayName="Fawkes Indoor Fireplace";
-		descriptionShort="This campfire was made by Jamison Fawkes himself. It will burn forever once ignited.";
+		descriptionShort="This campfire was made by Jamison Fawkes himself. It will burn forever once ignited.";	
+		varWetMax=0;
 	};
 	
 	class FBF_OvenIndoor: OvenIndoor
 	{
 		scope=2;
 		displayName="Fawkes Indoor Oven Fireplace";
-		descriptionShort="This campfire was made by Jamison Fawkes himself. It will burn forever once ignited.";
+		descriptionShort="This campfire was made by Jamison Fawkes himself. It will burn forever once ignited.";	
+		varWetMax=0;
 	};
 		
 	class FBF_Pot: Pot
